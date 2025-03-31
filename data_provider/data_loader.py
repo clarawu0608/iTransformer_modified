@@ -10,6 +10,165 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
+def segment_column(column, column_date, n, m):
+    """
+    Segments a column of a DataFrame into overlapping segments.
+
+    Args:
+        column (pd.Series): The input column to be segmented.
+        n (int): Length of each segment.
+        m (int): Overlap length between consecutive segments.
+
+    Returns:
+        pd.DataFrame: A DataFrame where each column represents a segment.
+    """
+    # date
+    first_dates = column_date[:n]
+
+    # Convert the column to a numpy array
+    data = column.values
+    
+    # Calculate the step size
+    step = n - m
+    
+    # Check if segmenting is possible
+    if step <= 0:
+        raise ValueError("Overlap length (m) must be less than the segment length (n).")
+    
+    # Generate segments
+    segments = []
+    segments.append(first_dates)
+    for i in range(0, len(data) - n + 1, step):
+        segments.append(data[i:i + n])
+    
+    # Convert segments to a DataFrame
+    segment_df = pd.DataFrame(segments).T  # Transpose to match DataFrame style
+
+     # Assign column names: 'date', '0', '1', ..., 'n'
+    segment_df.columns = ['date'] + [str(i) for i in range(segment_df.shape[1] - 1)]
+    
+    return segment_df
+
+def generate_mask_matrix(length, num, prob_missing):
+    """
+    Generate a Boolean matrix to represent masked data with random missing patterns.
+    
+    Parameters:
+    - length (int): The number of time steps (rows).
+    - num (int): The number of features (columns).
+    - prob_missing (float): The probability of missing data (values masked as 0).
+
+    Returns:
+    - np.ndarray: A Boolean matrix with the same shape as (length, num).
+                  0 represents masked data, 1 represents unmasked data.
+    """
+    if not (0 <= prob_missing <= 1):
+        raise ValueError("prob_missing must be between 0 and 1.")
+    
+    # Generate a matrix of random values
+    random_matrix = np.random.rand(length, num)
+    
+    # Generate the mask: 0 for masked data, 1 for unmasked data
+    mask_matrix = random_matrix > prob_missing
+    
+    return mask_matrix
+
+class Dataset_Imputation(Dataset):
+    def __init__(self, root_path, flag='train', seq_len = 24, miss_rate=0.1,
+                 features='S', data_path='ETTh1.csv',
+                 target='OT', scale=True, timeenc=0, freq='h', column_number=1):
+        # info
+        self.seq_len = seq_len
+        self.miss_rate = miss_rate
+        self.column_number = column_number
+        # init
+        assert flag in ['train', 'test', 'val']
+        type_map = {'train': 0, 'val': 1, 'test': 2}
+        self.set_type = type_map[flag]
+
+        self.features = features
+        self.target = target
+        self.scale = scale
+        self.timeenc = timeenc
+        self.freq = freq
+
+        self.root_path = root_path
+        self.data_path = data_path
+        self.__read_data__()
+
+    def __read_data__(self):
+        self.scaler = StandardScaler()
+        df_raw = pd.read_csv(os.path.join(self.root_path,
+                                          self.data_path))
+
+        '''
+        df_raw.columns: ['date', ...(other features), target feature]
+        '''
+        cols = list(df_raw.columns)
+        cols.remove(self.target)
+        cols.remove('date')
+        df_raw = df_raw[['date'] + cols + [self.target]]
+        if self.column_number == 1:
+            segment_df = segment_column(df_raw['0'], df_raw['date'], 24 * 4 * 4, 24 * 4)
+            # !!!!! bad practice: test !!!!!
+            df_raw = segment_df
+
+        num_train = int(len(df_raw) * 0.7)
+        num_test = int(len(df_raw) * 0.2)
+        num_vali = len(df_raw) - num_train - num_test
+        border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]
+        border2s = [num_train, num_train + num_vali, len(df_raw)]
+        border1 = border1s[self.set_type]
+        border2 = border2s[self.set_type]
+
+        if self.features == 'M' or self.features == 'MS':
+            cols_data = df_raw.columns[1:]
+            df_data = df_raw[cols_data]
+        elif self.features == 'S':
+            df_data = df_raw[[self.target]]
+
+        if self.scale:
+            train_data = df_data[border1s[0]:border2s[0]]
+            self.scaler.fit(train_data.values)
+            data = self.scaler.transform(df_data.values)
+        else:
+            data = df_data.values
+
+        df_stamp = df_raw[['date']][border1:border2]
+        df_stamp['date'] = pd.to_datetime(df_stamp.date)
+        if self.timeenc == 0:
+            df_stamp['month'] = df_stamp.date.apply(lambda row: row.month, 1)
+            df_stamp['day'] = df_stamp.date.apply(lambda row: row.day, 1)
+            df_stamp['weekday'] = df_stamp.date.apply(lambda row: row.weekday(), 1)
+            df_stamp['hour'] = df_stamp.date.apply(lambda row: row.hour, 1)
+            data_stamp = df_stamp.drop(['date'], 1).values
+        elif self.timeenc == 1:
+            data_stamp = time_features(pd.to_datetime(df_stamp['date'].values), freq=self.freq)
+            data_stamp = data_stamp.transpose(1, 0)
+
+        self.data_x = data[border1:border2]
+        self.data_y = data[border1:border2]
+        self.data_stamp = data_stamp
+
+    def __getitem__(self, index):
+        s_begin = index
+        s_end = s_begin + self.seq_len
+
+        seq_y = self.data_x[s_begin:s_end]
+        mask = generate_mask_matrix(seq_y.shape[0], seq_y.shape[1], self.miss_rate)
+        seq_x = seq_y * mask
+        seq_x_mark = self.data_stamp[s_begin:s_end]
+        seq_y_mark = seq_x_mark.copy()
+
+        return seq_x, seq_y, seq_x_mark, seq_y_mark, mask
+
+    def __len__(self):
+        return len(self.data_x) - self.seq_len + 1
+
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
+
+
 class Dataset_ETT_hour(Dataset):
     def __init__(self, root_path, flag='train', size=None,
                  features='S', data_path='ETTh1.csv',
