@@ -40,11 +40,42 @@ class MaskedMSELoss(nn.Module):
         """
 
         # for this particular loss, one may also elementwise multiply y_pred and y_true with the inverted mask
-        masked_pred = torch.masked_select(y_pred, mask)
-        masked_true = torch.masked_select(y_true, mask)
+        masked_pred = torch.masked_select(y_pred, ~mask)
+        masked_true = torch.masked_select(y_true, ~mask)
 
         return self.mse_loss(masked_pred, masked_true)
 
+def linear_interpolate_impute(input_tensor: torch.Tensor, mask_tensor: torch.Tensor) -> torch.Tensor:
+    """
+    Imputes missing values in the input tensor using linear interpolation.
+    Missing values are identified by a mask tensor, where 0 indicates missing.
+
+    Args:
+        input_tensor (torch.Tensor): Tensor of shape (time_points, features).
+        mask_tensor (torch.Tensor): Binary tensor of shape (time_points, features),
+                                    where 1 means observed and 0 means missing.
+    
+    Returns:
+        torch.Tensor: Imputed tensor with missing values filled via linear interpolation.
+    """
+    input_np = input_tensor.numpy()
+    mask_np = mask_tensor.numpy()
+    
+    time_points, features = input_np.shape
+    imputed_np = input_np.copy()
+    
+    for feature in range(features):
+        x = np.arange(time_points)
+        y = input_np[:, feature]
+        mask = mask_np[:, feature].astype(bool)
+        
+        if np.all(mask):  # No missing values
+            continue
+        
+        imputed_values = np.interp(x, x[mask], y[mask])
+        imputed_np[:, feature] = imputed_values
+    
+    return torch.tensor(imputed_np, dtype=input_tensor.dtype)
 
 class Exp_Imputation(Exp_Basic):
     def __init__(self, args):
@@ -249,6 +280,8 @@ class Exp_Imputation(Exp_Basic):
         masked_preds = []
         masked_trues = []
         masks = []
+        baseline_preds = []
+        masked_baseline_preds = []
         folder_path = './test_results/' + setting + '/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
@@ -296,16 +329,18 @@ class Exp_Imputation(Exp_Basic):
                 true = batch_y
                 pred_tensor = torch.tensor(pred)
                 true_tensor = torch.tensor(true)
-                # print(pred_tensor.shape, true_tensor.shape)
-                masked_pred = torch.masked_select(pred_tensor, mask)
-                masked_true = torch.masked_select(true_tensor, mask)
-                # print(masked_pred.shape, masked_true.shape)
+                masked_pred = torch.masked_select(pred_tensor, ~mask)
+                masked_true = torch.masked_select(true_tensor, ~mask)
+                baseline_pred = linear_interpolate_impute(batch_x.reshape(batch_x.shape[-2],batch_x.shape[-1]), mask.reshape(mask.shape[-2],mask.shape[-1]))
+                masked_baseline_pred = torch.masked_select(baseline_pred, ~mask)
 
                 preds.append(pred)
                 trues.append(true)
                 masked_preds.append(masked_pred.cpu().numpy())  # Convert before appending
                 masked_trues.append(masked_true.cpu().numpy()) 
                 masks.append(mask.cpu().numpy())
+                baseline_preds.append(baseline_pred.cpu().numpy())
+                masked_baseline_preds.append(masked_baseline_pred.cpu().numpy())
                 if i % 20 == 0:
                     input = batch_x.detach().cpu().numpy()
                     if test_data.scale and self.args.inverse:
@@ -318,19 +353,18 @@ class Exp_Imputation(Exp_Basic):
         preds = np.array(preds)
         trues = np.array(trues)
         masks = np.array(masks)
-        print(f"masks.shape: {masks.shape}")
+        baseline_preds = np.array(baseline_preds)
         masked_preds = np.concatenate(masked_preds).reshape(-1)
         masked_trues = np.concatenate(masked_trues).reshape(-1)
+        masked_baseline_preds = np.concatenate(masked_baseline_preds).reshape(-1)
+        # print(masked_preds.shape, masked_trues.shape, masked_baseline_preds.shape)
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
         trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
         masks = masks.reshape(-1, masks.shape[-2], masks.shape[-1])
-        # print(f"before flatten: masked_preds.shape: {masked_preds.shape}") 
-        # print(f"before flatten: masked_trues.shape: {masked_trues.shape}")
-        # print(f"masked_preds: {masked_preds}")
+        baseline_preds = baseline_preds.reshape(-1, baseline_preds.shape[-2], baseline_preds.shape[-1])
         masked_preds = masked_preds.flatten()
         masked_trues = masked_trues.flatten()
-        print('test shape:', preds.shape, trues.shape, masks.shape)
-        print('masked test shape:', masked_preds.shape, masked_trues.shape)
+        masked_baseline_preds = masked_baseline_preds.flatten()
 
         # result save
         folder_path = './results/' + setting + '/'
@@ -346,12 +380,14 @@ class Exp_Imputation(Exp_Basic):
             pred = preds[idx, :, 0]  # Use only the first feature (feature index 0)
             true = trues[idx, :, 0]  # Use only the first feature (feature index 0)
             mask = masks[idx, :, 0]  # Use only the first feature (feature index 0)
+            baseline_pred = baseline_preds[idx, :, 0]  # Use only the first feature (feature index 0)
             mask = mask.astype(int)
 
             plt.subplot(num_samples_to_plot, 1, i + 1)
             plt.plot(range(len(true)), true, label="Ground Truth", color='blue')
             plt.plot(range(len(pred)), pred, label="Predicted Output", color='orange')
             plt.plot(range(len(mask)), mask, label="Mask", color='green')
+            plt.plot(range(len(baseline_pred)), baseline_pred, label="Baseline Prediction", color='red')
     
             plt.xlabel("Timesteps")
             plt.ylabel("Values")
@@ -366,7 +402,10 @@ class Exp_Imputation(Exp_Basic):
         plt.close()
 
         mae, mse, rmse, mape, mspe = metric(masked_preds, masked_trues)
+        # print(masked_baseline_preds.shape, masked_trues.shape)
+        mae_baseline, mse_baseline, rmse_baseline, mape_baseline, mspe_baseline = metric(masked_baseline_preds, masked_trues)
         print('mse:{}, mae:{}'.format(mse, mae))
+        print('mse_baseline:{}, mae_baseline:{}'.format(mse_baseline, mae_baseline))
         f = open("result_long_term_forecast.txt", 'a')
         f.write(setting + "  \n")
         f.write('mse:{}, mae:{}'.format(mse, mae))
