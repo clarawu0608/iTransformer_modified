@@ -76,11 +76,11 @@ def generate_mask_matrix(length, num, prob_missing):
 class Dataset_Imputation(Dataset):
     def __init__(self, root_path, flag='train', seq_len = 24, miss_rate=0.1,
                  features='S', data_path='ETTh1.csv',
-                 target='OT', scale=True, timeenc=0, freq='h', column_number=1):
+                 target='OT', scale=True, timeenc=0, freq='h', single_column=True):
         # info
         self.seq_len = seq_len
         self.miss_rate = miss_rate
-        self.column_number = column_number
+        self.single_column = single_column
         # init
         assert flag in ['train', 'test', 'val']
         type_map = {'train': 0, 'val': 1, 'test': 2}
@@ -108,7 +108,7 @@ class Dataset_Imputation(Dataset):
         cols.remove(self.target)
         cols.remove('date')
         df_raw = df_raw[['date'] + cols + [self.target]]
-        if self.column_number == 1:
+        if self.single_column :
             segment_df = segment_column(df_raw['0'], df_raw['date'], 24 * 4 * 4, 24 * 4)
             # !!!!! bad practice: test !!!!!
             df_raw = segment_df

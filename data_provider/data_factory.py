@@ -47,7 +47,7 @@ def data_provider(args, flag):
             target=args.target,
             timeenc=timeenc,
             freq=freq,
-            column_number=args.column_number,
+            single_column=args.single_column,
         )
     else:
         data_set = Data(
@@ -59,7 +59,7 @@ def data_provider(args, flag):
             target=args.target,
             timeenc=timeenc,
             freq=freq,
-            column_number=args.column_number,
+            single_column=args.single_column,
         )
 
     print(flag, len(data_set))
