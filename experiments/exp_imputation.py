@@ -9,6 +9,7 @@ import os
 import time
 import warnings
 import numpy as np
+import matplotlib.pyplot as plt
 
 warnings.filterwarnings('ignore')
 
@@ -66,7 +67,7 @@ class Exp_Imputation(Exp_Basic):
         return model_optim
 
     def _select_criterion(self):
-        criterion = MaskedMSELoss()
+        criterion = nn.MSELoss()
         return criterion
 
     def vali(self, vali_data, vali_loader, criterion):
@@ -105,7 +106,7 @@ class Exp_Imputation(Exp_Basic):
                 pred = outputs.detach().cpu()
                 true = batch_y.detach().cpu()
 
-                loss = criterion(pred, true, mask)
+                loss = criterion(pred, true)
 
                 total_loss.append(loss)
         total_loss = np.average(total_loss)
@@ -131,6 +132,9 @@ class Exp_Imputation(Exp_Basic):
 
         if self.args.use_amp:
             scaler = torch.cuda.amp.GradScaler()
+
+        train_losses = []
+        vali_losses = []
 
         for epoch in range(self.args.train_epochs):
             iter_count = 0
@@ -164,7 +168,7 @@ class Exp_Imputation(Exp_Basic):
                         f_dim = -1 if self.args.features == 'MS' else 0
                         outputs = outputs[:, -self.args.pred_len:, f_dim:]
                         batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
-                        loss = criterion(outputs, batch_y, mask)
+                        loss = criterion(outputs, batch_y)
                         train_loss.append(loss.item())
                 else:
                     if self.args.output_attention:
@@ -175,7 +179,7 @@ class Exp_Imputation(Exp_Basic):
                     f_dim = -1 if self.args.features == 'MS' else 0
                     outputs = outputs[:, -self.args.pred_len:, f_dim:]
                     batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
-                    loss = criterion(outputs, batch_y, mask)
+                    loss = criterion(outputs, batch_y)
                     train_loss.append(loss.item())
 
                 if (i + 1) % 100 == 0:
@@ -199,6 +203,9 @@ class Exp_Imputation(Exp_Basic):
             vali_loss = self.vali(vali_data, vali_loader, criterion)
             test_loss = self.vali(test_data, test_loader, criterion)
 
+            train_losses.append(train_loss)
+            vali_losses.append(vali_loss)
+
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
             early_stopping(vali_loss, self.model, path)
@@ -209,6 +216,22 @@ class Exp_Imputation(Exp_Basic):
             adjust_learning_rate(model_optim, epoch + 1, self.args)
 
             # get_cka(self.args, setting, self.model, train_loader, self.device, epoch)
+
+        # Plot training and validation loss
+        folder_path = f'./results/{setting}/'
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(range(len(train_losses)), train_losses, label='Train Loss')
+        plt.plot(range(len(vali_losses)), vali_losses, label='Validation Loss')
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.title('Training and Validation Loss')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(f'./results/{setting}/loss_curve.png')
+        plt.show()
 
         best_model_path = path + '/' + 'checkpoint.pth'
         self.model.load_state_dict(torch.load(best_model_path))
@@ -225,6 +248,7 @@ class Exp_Imputation(Exp_Basic):
         trues = []
         masked_preds = []
         masked_trues = []
+        masks = []
         folder_path = './test_results/' + setting + '/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
@@ -281,6 +305,7 @@ class Exp_Imputation(Exp_Basic):
                 trues.append(true)
                 masked_preds.append(masked_pred.cpu().numpy())  # Convert before appending
                 masked_trues.append(masked_true.cpu().numpy()) 
+                masks.append(mask.cpu().numpy())
                 if i % 20 == 0:
                     input = batch_x.detach().cpu().numpy()
                     if test_data.scale and self.args.inverse:
@@ -292,22 +317,53 @@ class Exp_Imputation(Exp_Basic):
 
         preds = np.array(preds)
         trues = np.array(trues)
+        masks = np.array(masks)
+        print(f"masks.shape: {masks.shape}")
         masked_preds = np.concatenate(masked_preds).reshape(-1)
         masked_trues = np.concatenate(masked_trues).reshape(-1)
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
         trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
+        masks = masks.reshape(-1, masks.shape[-2], masks.shape[-1])
         # print(f"before flatten: masked_preds.shape: {masked_preds.shape}") 
         # print(f"before flatten: masked_trues.shape: {masked_trues.shape}")
         # print(f"masked_preds: {masked_preds}")
         masked_preds = masked_preds.flatten()
         masked_trues = masked_trues.flatten()
-        print('test shape:', preds.shape, trues.shape)
+        print('test shape:', preds.shape, trues.shape, masks.shape)
         print('masked test shape:', masked_preds.shape, masked_trues.shape)
 
         # result save
         folder_path = './results/' + setting + '/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
+
+         # Plot predictions vs ground truth for 3 random samples
+        plt.figure(figsize=(15, 10))
+        num_samples_to_plot = 3
+        random_indices = np.random.choice(len(preds), size=num_samples_to_plot, replace=False)
+
+        for i, idx in enumerate(random_indices):
+            pred = preds[idx, :, 0]  # Use only the first feature (feature index 0)
+            true = trues[idx, :, 0]  # Use only the first feature (feature index 0)
+            mask = masks[idx, :, 0]  # Use only the first feature (feature index 0)
+            mask = mask.astype(int)
+
+            plt.subplot(num_samples_to_plot, 1, i + 1)
+            plt.plot(range(len(true)), true, label="Ground Truth", color='blue')
+            plt.plot(range(len(pred)), pred, label="Predicted Output", color='orange')
+            plt.plot(range(len(mask)), mask, label="Mask", color='green')
+    
+            plt.xlabel("Timesteps")
+            plt.ylabel("Values")
+            plt.title(f"Predictions vs Ground Truth - Sample {i + 1} (Feature 0)")
+            plt.legend()
+            plt.grid(True)
+
+        graph_path = os.path.join(folder_path, 'predictions_vs_ground_truth.png')
+        plt.tight_layout()
+        plt.savefig(graph_path)
+        print(f"Saved comparison graph at {graph_path}")
+        plt.close()
 
         mae, mse, rmse, mape, mspe = metric(masked_preds, masked_trues)
         print('mse:{}, mae:{}'.format(mse, mae))

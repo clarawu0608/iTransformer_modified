@@ -35,7 +35,7 @@ def data_provider(args, flag):
         batch_size = args.batch_size  # bsz for train and valid
         freq = args.freq
 
-    print(f"column_number: {args.column_number}")
+    # print(f"miss_rate: {args.miss_rate}")
     if "imputation" in args.data:
         data_set = Data(
             root_path=args.root_path,
