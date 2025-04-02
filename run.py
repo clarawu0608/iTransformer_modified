@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
     parser.add_argument('--model', type=str, required=True, default='iTransformer',
                         help='model name, options: [iTransformer, iInformer, iReformer, iFlowformer, iFlashformer]')
-    parser.add_argument('--single_column', type=bool, default=True, help='just to check the functionality quickly')
+    parser.add_argument('--single_column', type=lambda x: x.lower() in ['true', '1'], default=True, help='just to check the functionality quickly')
 
     # data loader
     parser.add_argument('--data', type=str, required=True, default='custom', help='dataset type')
