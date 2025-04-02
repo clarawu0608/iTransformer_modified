@@ -109,13 +109,15 @@ class Dataset_Imputation(Dataset):
         cols.remove('date')
         df_raw = df_raw[['date'] + cols + [self.target]]
         if self.single_column :
-            segment_df = segment_column(df_raw['0'], df_raw['date'], 24 * 4 * 4, 24 * 4)
+            # date column and the feature '0' column
+            segment_df = segment_column(df_raw['0'], df_raw['date'], 24 * 4 * 4, 24 * 2)
             # !!!!! bad practice: test !!!!!
             df_raw = segment_df
 
         num_train = int(len(df_raw) * 0.7)
         num_test = int(len(df_raw) * 0.2)
         num_vali = len(df_raw) - num_train - num_test
+        # idx of train, vali, test
         border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]
         border2s = [num_train, num_train + num_vali, len(df_raw)]
         border1 = border1s[self.set_type]
@@ -150,7 +152,7 @@ class Dataset_Imputation(Dataset):
         self.data_y = data[border1:border2]
         self.data_stamp = data_stamp
 
-    def __getitem__(self, index):
+    def __getitem__(self, index): # dataloader[index] for different batches 
         s_begin = index
         s_end = s_begin + self.seq_len
 
