@@ -48,6 +48,7 @@ def data_provider(args, flag):
             timeenc=timeenc,
             freq=freq,
             single_column=args.single_column,
+            token_size=args.token_size,
         )
     else:
         data_set = Data(

@@ -72,10 +72,65 @@ def linear_interpolate_impute(input_tensor: torch.Tensor, mask_tensor: torch.Ten
         if np.all(mask):  # No missing values
             continue
         
-        imputed_values = np.interp(x, x[mask], y[mask])
+        if len(x[mask]) == 0 or len(y[mask]) == 0:
+            imputed_values = x
+        else:
+            imputed_values = np.interp(x, x[mask], y[mask])
         imputed_np[:, feature] = imputed_values
     
     return torch.tensor(imputed_np, dtype=input_tensor.dtype)
+
+def inverse_multi_tokens_array(tensor_array, n, m, T):
+    """
+    Reconstructs original matrices from (p, n, x*N) tokenized form.
+
+    Args:
+        tensor_array: numpy array of shape (p, n, x*N), dtype bool/int/float
+        n: segment length
+        m: overlap length
+        T: desired output sequence length
+
+    Returns:
+        numpy array of shape (p, T, N)
+    """
+    p, _, total_dim = tensor_array.shape
+    step = n - m
+    x = (T + m) // n  # number of segments
+    N = total_dim // x          # correct feature dimension
+
+    is_bool_input = tensor_array.dtype == np.bool_
+    is_int_input = np.issubdtype(tensor_array.dtype, np.integer)
+
+    outputs = []
+
+    for i in range(p):
+        matrix = tensor_array[i]  # shape (n, x*N)
+        segments = np.split(matrix, x, axis=1)         # list of (n, N)
+        segments = np.stack([seg for seg in segments], axis=0)  # (x, n, N)
+
+
+        if is_bool_input:
+            output = np.zeros((T, N), dtype=bool)
+            for j, seg in enumerate(segments):
+                start = j * step
+                end = start + n
+                output[start:end] = seg  # overwrite
+        else:
+            output = np.zeros((T, N), dtype=np.float32)
+            count = np.zeros((T, N), dtype=np.float32)
+            for j, seg in enumerate(segments):
+                start = j * step
+                end = start + n
+                output[start:end] += seg.astype(np.float32)
+                count[start:end] += 1
+            count[count == 0] = 1
+            output = output / count
+            if is_int_input:
+                output = np.rint(output).astype(tensor_array.dtype)
+
+        outputs.append(output[:T])  # Trim to exact T
+
+    return np.stack(outputs)
 
 class Exp_Imputation(Exp_Basic):
     def __init__(self, args):
@@ -361,6 +416,11 @@ class Exp_Imputation(Exp_Basic):
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
         trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
         masks = masks.reshape(-1, masks.shape[-2], masks.shape[-1])
+        print(preds.shape, trues.shape, masks.shape)
+        preds = inverse_multi_tokens_array(preds, self.args.token_size, int(self.args.token_size/4), self.args.seq_len)
+        trues = inverse_multi_tokens_array(trues, self.args.token_size, int(self.args.token_size/4), self.args.seq_len)
+        masks = inverse_multi_tokens_array(masks, self.args.token_size, int(self.args.token_size/4), self.args.seq_len)
+        print(preds.shape, trues.shape, masks.shape)
         baseline_preds = baseline_preds.reshape(-1, baseline_preds.shape[-2], baseline_preds.shape[-1])
         masked_preds = masked_preds.flatten()
         masked_trues = masked_trues.flatten()
@@ -409,6 +469,7 @@ class Exp_Imputation(Exp_Basic):
         f = open("result_long_term_forecast.txt", 'a')
         f.write(setting + "  \n")
         f.write('mse:{}, mae:{}'.format(mse, mae))
+        f.write('baseline mse:{}, baseline mae:{}'.format(mse_baseline, mae_baseline))
         f.write('\n')
         f.write('\n')
         f.close()

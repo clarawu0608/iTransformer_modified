@@ -82,3 +82,152 @@ mse:0.5490541458129883, mae:0.34677064418792725
 traffic_small_24_24_mse_0.5_iTransformer_imputation_M_ft24_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.5_False_0  
 mse:0.2351512610912323, mae:0.23989751935005188
 
+traffic_small_24_24_mse_0.3_iTransformer_imputation_M_ft40_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.24508710205554962, mae:0.2627904713153839
+
+traffic_small_24_24_mse_0.3_single_iTransformer_imputation_M_ft40_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.1898788958787918, mae:0.23056934773921967
+
+test_iTransformer_imputation_M_ft40_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.3328045606613159, mae:0.3429253101348877
+
+test_iTransformer_imputation_M_ft40_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.3328045606613159, mae:0.3429253101348877
+
+test_iTransformer_imputation_M_ft40_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.27175185084342957, mae:0.29456865787506104
+
+multi_0.3_40_16_iTransformer_imputation_M_ft40_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.20160794258117676, mae:0.23102599382400513
+
+multi_0.3_44_16_iTransformer_imputation_M_ft44_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.20445610582828522, mae:0.23254022002220154
+
+========== 44 ==========
+multi_0.1_44_16_iTransformer_imputation_M_ft44_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.1_False_0  
+mse:0.21019592881202698, mae:0.24934454262256622
+baseline mse:0.18258808553218842, baseline mae:0.20337574183940887
+
+multi_0.5_44_16_iTransformer_imputation_M_ft44_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.5_False_0  
+mse:0.2427884191274643, mae:0.25476399064064026
+baseline mse:0.3997623026371002, baseline mae:0.33039769530296326
+
+multi_0.7_44_16_iTransformer_imputation_M_ft44_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.7_False_0  
+mse:0.3606094419956207, mae:0.3345707058906555
+baseline mse:1.0648531913757324, baseline mae:0.5178295969963074
+
+single_0.1_44_iTransformer_imputation_M_ft44_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.1_False_0  
+mse:0.22449786961078644, mae:0.2711344063282013
+baseline mse:0.16277334094047546, baseline mae:0.19073936343193054
+
+single_0.3_44_iTransformer_imputation_M_ft44_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.18799670040607452, mae:0.23061971366405487
+baseline mse:0.221487358212471, baseline mae:0.23235496878623962
+
+single_0.5_44_iTransformer_imputation_M_ft44_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.5_False_0  
+mse:0.21297013759613037, mae:0.24777165055274963
+baseline mse:0.33864128589630127, baseline mae:0.3045341372489929
+
+single_0.7_44_iTransformer_imputation_M_ft44_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.7_False_0  
+mse:0.2682148218154907, mae:0.28683894872665405
+baseline mse:0.6075355410575867, baseline mae:0.44729405641555786
+
+========== 76 ==========
+multi_0.1_76_16_iTransformer_imputation_M_ft76_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.1_False_0  
+mse:0.213761568069458, mae:0.2527325749397278
+baseline mse:0.18111374974250793, baseline mae:0.2035066783428192
+
+multi_0.3_76_16_iTransformer_imputation_M_ft76_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.20312492549419403, mae:0.23061315715312958
+baseline mse:0.2560393214225769, baseline mae:0.2507881224155426
+
+multi_0.5_76_16_iTransformer_imputation_M_ft76_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.5_False_0  
+mse:0.24494080245494843, mae:0.25629404187202454
+baseline mse:0.4004134237766266, baseline mae:0.33060503005981445
+
+multi_0.7_76_16_iTransformer_imputation_M_ft76_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.7_False_0  
+mse:0.371025949716568, mae:0.3418046534061432
+baseline mse:1.080934762954712, baseline mae:0.5194505453109741
+
+single_0.1_76_iTransformer_imputation_M_ft76_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.1_False_0  
+mse:0.2608586847782135, mae:0.30314725637435913
+baseline mse:0.1539473831653595, baseline mae:0.18614928424358368
+
+single_0.3_76_iTransformer_imputation_M_ft76_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.20531170070171356, mae:0.24392448365688324
+baseline mse:0.21624715626239777, baseline mae:0.22840984165668488
+
+single_0.5_76_iTransformer_imputation_M_ft76_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.5_False_0  
+mse:0.22528405487537384, mae:0.2623072862625122
+baseline mse:0.32702505588531494, baseline mae:0.29836782813072205
+
+single_0.7_76_iTransformer_imputation_M_ft76_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.7_False_0  
+mse:0.2713295817375183, mae:0.29182174801826477
+baseline mse:0.5850763916969299, baseline mae:0.4385456144809723
+
+========== 90 ==========
+multi_0.1_90_24_iTransformer_imputation_M_ft90_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.1_False_0  
+mse:0.2119789570569992, mae:0.2537223696708679
+baseline mse:0.17057934403419495, baseline mae:0.1956750601530075
+
+multi_0.3_90_24_iTransformer_imputation_M_ft90_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.20217090845108032, mae:0.2344154268503189
+baseline mse:0.23598229885101318, baseline mae:0.2399670034646988
+
+multi_0.5_90_24_iTransformer_imputation_M_ft90_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.5_False_0  
+mse:0.22784572839736938, mae:0.24816353619098663
+baseline mse:0.36766332387924194, baseline mae:0.3163893222808838
+
+multi_0.7_90_24_iTransformer_imputation_M_ft90_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.7_False_0  
+mse:0.31217795610427856, mae:0.30721592903137207
+baseline mse:0.7147432565689087, baseline mae:0.46994253993034363
+
+single_0.1_90_iTransformer_imputation_M_ft90_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.1_False_0  
+mse:0.2739381492137909, mae:0.3134065270423889
+baseline mse:0.15555405616760254, baseline mae:0.18549269437789917
+
+single_0.3_90_iTransformer_imputation_M_ft90_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.20604285597801208, mae:0.2466634064912796
+baseline mse:0.2127000093460083, baseline mae:0.2267933189868927
+
+single_0.5_90_iTransformer_imputation_M_ft90_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.5_False_0  
+mse:0.22487372159957886, mae:0.2626681923866272
+baseline mse:0.3213285505771637, baseline mae:0.29578766226768494
+
+single_0.7_90_iTransformer_imputation_M_ft90_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.7_False_0  
+mse:0.2707522511482239, mae:0.2931367754936218
+baseline mse:0.5803781747817993, baseline mae:0.43571388721466064
+
+========== 120 ==========
+multi_0.1_120_32_iTransformer_imputation_M_ft120_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.1_False_0  
+mse:0.20501817762851715, mae:0.2473982870578766
+baseline mse:0.16203156113624573, baseline mae:0.19041229784488678
+
+multi_0.3_120_32_iTransformer_imputation_M_ft120_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.1802079677581787, mae:0.2181711047887802
+baseline mse:0.22294986248016357, baseline mae:0.233038067817688
+
+multi_0.5_120_32_iTransformer_imputation_M_ft120_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.5_False_0  
+mse:0.20848610997200012, mae:0.2354154884815216
+baseline mse:0.3464452624320984, baseline mae:0.30672845244407654
+
+multi_0.7_120_32_iTransformer_imputation_M_ft120_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.7_False_0  
+mse:0.2747398316860199, mae:0.28283292055130005
+baseline mse:0.6369783282279968, baseline mae:0.4538380801677704
+
+single_0.1_120_iTransformer_imputation_M_ft120_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.1_False_0  
+mse:0.3003227114677429, mae:0.3330111801624298
+baseline mse:0.15082283318042755, baseline mae:0.18287193775177002
+
+single_0.3_120_iTransformer_imputation_M_ft120_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.3_False_0  
+mse:0.21439231932163239, mae:0.2510649859905243
+baseline mse:0.20630311965942383, baseline mae:0.2235422134399414
+
+single_0.5_120_iTransformer_imputation_M_ft120_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.5_False_0  
+mse:0.22534415125846863, mae:0.2605818808078766
+baseline mse:0.3132006824016571, baseline mae:0.2918420135974884
+
+single_0.7_120_iTransformer_imputation_M_ft120_sl48_ll96_pl512_dm8_nh4_el1_dl512_df1_fctimeF_ebTrue_dtExp_projection_0.7_False_0  
+mse:0.271323561668396, mae:0.2963918149471283
+baseline mse:0.5623597502708435, baseline mae:0.4289986491203308
+

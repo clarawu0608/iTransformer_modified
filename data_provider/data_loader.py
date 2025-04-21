@@ -49,6 +49,29 @@ def segment_column(column, column_date, n, m):
     
     return segment_df
 
+def multi_tokens(matrix: torch.Tensor, n: int, m: int) -> torch.Tensor:
+    T, N = matrix.shape
+    step = n - m
+    segments = []
+    for start in range(0, T, n):
+        if start != 0:
+            start = start - m
+        if start + m >= T-1:
+            break
+        end = start + n
+        if end <= T:
+            segment = matrix[start:end]  # (n, N)
+        else:
+            # pad the segment with the last row
+            pad_len = end - T
+            pad = matrix[-1].unsqueeze(0).repeat(pad_len, 1)  # (pad_len, N)
+            segment = torch.cat([matrix[start:], pad], dim=0)  # (n, N)
+        segments.append(segment.T)  # transpose to (N, n)
+
+    # concatenate segments along the feature dimension
+    result = torch.cat(segments, dim=0).T  # (n, x*N)
+    return result
+
 def generate_mask_matrix(length, num, prob_missing):
     """
     Generate a Boolean matrix to represent masked data with random missing patterns.
@@ -76,11 +99,13 @@ def generate_mask_matrix(length, num, prob_missing):
 class Dataset_Imputation(Dataset):
     def __init__(self, root_path, flag='train', seq_len = 24, miss_rate=0.1,
                  features='S', data_path='ETTh1.csv',
-                 target='OT', scale=True, timeenc=0, freq='h', single_column=True):
+                 target='OT', scale=True, timeenc=0, freq='h', 
+                 single_column=True, token_size=0):
         # info
         self.seq_len = seq_len
         self.miss_rate = miss_rate
         self.single_column = single_column
+        self.token_size = token_size
         # init
         assert flag in ['train', 'test', 'val']
         type_map = {'train': 0, 'val': 1, 'test': 2}
@@ -113,6 +138,12 @@ class Dataset_Imputation(Dataset):
             segment_df = segment_column(df_raw['0'], df_raw['date'], 24 * 4 * 4, 24 * 2)
             # !!!!! bad practice: test !!!!!
             df_raw = segment_df
+        # elif self.token_size < self.seq_len and self.token_size > 0:
+        #     selected_columns = [str(i) for i in range(df_raw.shape[1]-2)]  # N is the number of columns you want
+        #     df_subset = df_raw[selected_columns]
+        #     segmented_columns = multi_tokens(df_subset, df_raw['date'], self.token_size, int(self.token_size / 4))
+        #     df_raw = segmented_columns
+        # print(df_raw)
 
         num_train = int(len(df_raw) * 0.7)
         num_test = int(len(df_raw) * 0.2)
@@ -161,6 +192,12 @@ class Dataset_Imputation(Dataset):
         seq_x = seq_y * mask
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = seq_x_mark.copy()
+        if self.token_size < self.seq_len and self.token_size > 0:
+            seq_x = multi_tokens(torch.tensor(seq_x), self.token_size, int(self.token_size/4))
+            seq_y = multi_tokens(torch.tensor(seq_y), self.token_size, int(self.token_size/4))
+            seq_x_mark = multi_tokens(torch.tensor(seq_x_mark), self.token_size, int(self.token_size/4))
+            seq_y_mark = multi_tokens(torch.tensor(seq_y_mark), self.token_size, int(self.token_size/4))
+            mask = multi_tokens(torch.tensor(mask), self.token_size, int(self.token_size/4))
 
         return seq_x, seq_y, seq_x_mark, seq_y_mark, mask
 

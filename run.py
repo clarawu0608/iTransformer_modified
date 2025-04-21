@@ -36,6 +36,7 @@ if __name__ == '__main__':
     parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
     parser.add_argument('--label_len', type=int, default=48, help='start token length') # no longer needed in inverted Transformers
     parser.add_argument('--pred_len', type=int, default=96, help='prediction sequence length')
+    parser.add_argument('--token_size', type=int, default=8, help='token size')
 
     # imputation task
     parser.add_argument('--miss_rate', type=float, default=0.1, help='missing data rate')
